@@ -344,7 +344,7 @@
                     <div class="bg-white p-4 rounded-2xl border border-stone-200 flex justify-between items-center shadow-2xs">
                         <div>
                             <span class="text-xs font-semibold text-stone-600" x-text="ins.category + ' (' + ins.date + ')'"></span>
-                            <p class="text-sm font-bold text-[#E5A93B]" x-text="formatCurrency(ins.amount)"></p>
+                            <p class="text-sm font-bold text-[#E5A93B]" x-text="ins.amount.toLocaleString() + ' ' + ins.currency + (ins.currency !== 'HKD' ? ' (~' + formatCurrency(getInsBaseAmount(ins)) + ')' : '')"></p>
                         </div>
                         <button @click="deleteInsurance(ins)" class="text-rose-400 text-xs" x-text="lang === 'en' ? 'Remove' : '刪除'"></button>
                     </div>
@@ -358,7 +358,20 @@
                         <option value="Invest-Link Plan" x-text="lang === 'en' ? 'Invest-Link Plan' : '投資相連保險 (ILAS)'"></option>
                         <option value="Others" x-text="lang === 'en' ? 'Others' : '其他'"></option>
                     </select>
-                    <input type="number" x-model="newInsAmount" :placeholder="lang === 'en' ? 'Value ($)' : '價值 ($)'" class="w-full text-xs p-2.5 rounded-xl border border-stone-200 bg-stone-50">
+                    
+                    <!-- Currency Selector & Amount Input Row -->
+                    <div class="flex space-x-2">
+                        <select x-model="newInsCurrency" class="w-28 text-xs p-2.5 rounded-xl border border-stone-200 bg-stone-50 font-semibold text-[#2D1B2D]">
+                            <option value="HKD">HKD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="CNY">CNY (¥)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="JPY">JPY (¥)</option>
+                        </select>
+                        <input type="number" x-model="newInsAmount" :placeholder="lang === 'en' ? 'Value' : '價值'" class="flex-1 text-xs p-2.5 rounded-xl border border-stone-200 bg-stone-50">
+                    </div>
+
                     <div class="flex items-center space-x-2">
                         <span class="text-[11px] text-stone-400 font-medium" x-text="lang === 'en' ? 'Saving Date:' : '記錄日期：'"></span>
                         <input type="date" x-model="newInsDate" class="flex-1 text-xs p-2 rounded-xl border border-stone-200 bg-stone-50">
@@ -511,9 +524,9 @@
                 newFxCode: 'JPY', newFxAmount: '', newFxDate: todayDateStr,
 
                 insurances: [
-                    { category: 'MPF', amount: 22100, date: todayDateStr }
+                    { category: 'MPF', amount: 22100, currency: 'HKD', date: todayDateStr }
                 ],
-                newInsCategory: 'Saving Plan', newInsAmount: '', newInsDate: todayDateStr,
+                newInsCategory: 'Saving Plan', newInsAmount: '', newInsCurrency: 'HKD', newInsDate: todayDateStr,
 
                 matchesFilter(dateStr) {
                     if (!dateStr) return true;
@@ -547,7 +560,7 @@
                     let allRecords = [];
                     this.accounts.forEach(a => allRecords.push({ title: a.name, amount: Number(a.balance), date: a.date }));
                     this.investments.forEach(i => allRecords.push({ title: i.category, amount: Number(i.amount), date: i.date }));
-                    this.insurances.forEach(ins => allRecords.push({ title: ins.category, amount: Number(ins.amount), date: ins.date }));
+                    this.insurances.forEach(ins => allRecords.push({ title: ins.category + ' (' + ins.currency + ')', amount: this.getInsBaseAmount(ins), date: ins.date }));
                     this.foreignCurrencies.forEach(f => {
                         const rates = { JPY: 0.0065, RMB: 0.14, EUR: 1.08, GBP: 1.28, AUD: 0.65, USD: 1.0 };
                         allRecords.push({ title: f.code + ' Holding', amount: Number(f.amount) * (rates[f.code] || 1), date: f.date });
@@ -589,13 +602,18 @@
                     return this.lang === 'en' ? (monthsEn[m] || m) : (monthsZh[m] || m);
                 },
 
+                getInsBaseAmount(ins) {
+                    const rates = { HKD: 1.0, USD: 7.8, EUR: 8.5, GBP: 10.0, CNY: 1.1, JPY: 0.05 };
+                    return Number(ins.amount) * (rates[ins.currency] || 1.0);
+                },
+
                 totalBankBalance() { return this.filteredAccounts().reduce((s, a) => s + Number(a.balance), 0); },
                 totalInvestments() { return this.filteredInvestments().reduce((s, i) => s + Number(i.amount), 0); },
                 totalForeignValue() { 
                     const rates = { JPY: 0.0065, RMB: 0.14, EUR: 1.08, GBP: 1.28, AUD: 0.65, USD: 1.0 };
                     return this.filteredForeignCurrencies().reduce((s, f) => s + (Number(f.amount) * (rates[f.code] || 1)), 0); 
                 },
-                totalInsurance() { return this.filteredInsurances().reduce((s, ins) => s + Number(ins.amount), 0); },
+                totalInsurance() { return this.filteredInsurances().reduce((s, ins) => s + this.getInsBaseAmount(ins), 0); },
                 
                 totalNetWorth() {
                     return this.totalBankBalance() + this.totalInvestments() + this.totalForeignValue() + this.totalInsurance();
@@ -655,7 +673,7 @@
 
                 addInsurance() {
                     if(this.newInsAmount) {
-                        this.insurances.push({ category: this.newInsCategory, amount: Number(this.newInsAmount), date: this.newInsDate });
+                        this.insurances.push({ category: this.newInsCategory, amount: Number(this.newInsAmount), currency: this.newInsCurrency, date: this.newInsDate });
                         this.newInsAmount = '';
                     }
                 },
