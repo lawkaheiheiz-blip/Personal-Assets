@@ -25,6 +25,22 @@
     <div class="w-[390px] h-[844px] bg-[#F7F5F0] rounded-[48px] shadow-2xl overflow-hidden flex flex-col relative" 
          x-data="financeApp()">
 
+        <!-- Toast Notification for Successful Save -->
+        <div x-show="showToast" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform -translate-y-2"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 transform translate-y-0"
+             x-transition:leave-end="opacity-0 transform -translate-y-2"
+             class="absolute top-16 left-6 right-6 z-50 bg-[#2D1B2D] text-white px-4 py-3 rounded-2xl shadow-xl flex items-center justify-between border border-amber-500/30">
+            <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5 text-[#E5A93B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                <span class="text-xs font-bold" x-text="lang === 'en' ? 'Record saved successfully to history!' : '記錄已成功儲存至歷史歸檔！'"></span>
+            </div>
+            <button @click="showToast = false" class="text-stone-400 hover:text-white text-xs font-bold">✕</button>
+        </div>
+
         <!-- Top Greeting Header with Editable Name & Male/Female Profile Selection -->
         <div class="flex items-center justify-between px-6 pt-6 pb-3">
             <div class="flex items-center space-x-3">
@@ -240,6 +256,12 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     </div>
                 </div>
+
+                <!-- Global Save Data Button -->
+                <button @click="saveAllData()" class="w-full bg-[#2D1B2D] hover:bg-[#3D263D] text-amber-300 text-xs font-bold py-3.5 px-4 rounded-2xl shadow-md flex items-center justify-center space-x-2 transition transform active:scale-95">
+                    <svg class="w-4 h-4 text-[#E5A93B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <span x-text="lang === 'en' ? '💾 Save Current Data & Record to History' : '💾 儲存當前數據並記錄到歷史'"></span>
+                </button>
             </div>
 
             <!-- ================= ACCOUNTS TAB ================= -->
@@ -269,7 +291,7 @@
                         <span class="text-[11px] text-stone-400 font-medium" x-text="lang === 'en' ? 'Saving Date:' : '記錄日期：'"></span>
                         <input type="date" x-model="newAccDate" class="flex-1 text-xs p-2 rounded-xl border border-stone-200 bg-stone-50">
                     </div>
-                    <button @click="addAccount()" class="w-full bg-[#E5A93B] text-white text-xs font-semibold py-2.5 rounded-xl shadow-md" x-text="lang === 'en' ? 'Add Account' : '新增戶口'"></button>
+                    <button @click="addAccount()" class="w-full bg-[#E5A93B] text-white text-xs font-semibold py-2.5 rounded-xl shadow-md" x-text="lang === 'en' ? 'Add Account & Save' : '新增戶口併儲存'"></button>
                 </div>
             </div>
 
@@ -301,7 +323,7 @@
                         <span class="text-[11px] text-stone-400 font-medium" x-text="lang === 'en' ? 'Saving Date:' : '記錄日期：'"></span>
                         <input type="date" x-model="newInvDate" class="flex-1 text-xs p-2 rounded-xl border border-stone-200 bg-stone-50">
                     </div>
-                    <button @click="addInvestment()" class="w-full bg-[#E5A93B] text-white text-xs font-semibold py-2.5 rounded-xl shadow-md" x-text="lang === 'en' ? 'Add Item' : '新增項目'"></button>
+                    <button @click="addInvestment()" class="w-full bg-[#E5A93B] text-white text-xs font-semibold py-2.5 rounded-xl shadow-md" x-text="lang === 'en' ? 'Add Item & Save' : '新增項目併儲存'"></button>
                 </div>
 
                 <div class="pt-2 border-t border-stone-200">
@@ -331,7 +353,7 @@
                             <span class="text-[11px] text-stone-400 font-medium" x-text="lang === 'en' ? 'Saving Date:' : '記錄日期：'"></span>
                             <input type="date" x-model="newFxDate" class="flex-1 text-xs p-2 rounded-xl border border-stone-200 bg-stone-50">
                         </div>
-                        <button @click="addForeignCurrency()" class="w-full bg-[#E5A93B] text-white text-xs font-semibold py-2.5 rounded-xl shadow-md" x-text="lang === 'en' ? 'Add Currency' : '新增外幣'"></button>
+                        <button @click="addForeignCurrency()" class="w-full bg-[#E5A93B] text-white text-xs font-semibold py-2.5 rounded-xl shadow-md" x-text="lang === 'en' ? 'Add Currency & Save' : '新增外幣併儲存'"></button>
                     </div>
                 </div>
             </div>
@@ -376,7 +398,7 @@
                         <span class="text-[11px] text-stone-400 font-medium" x-text="lang === 'en' ? 'Saving Date:' : '記錄日期：'"></span>
                         <input type="date" x-model="newInsDate" class="flex-1 text-xs p-2 rounded-xl border border-stone-200 bg-stone-50">
                     </div>
-                    <button @click="addInsurance()" class="w-full bg-[#E5A93B] text-white text-xs font-semibold py-2.5 rounded-xl shadow-md" x-text="lang === 'en' ? 'Add Insurance' : '新增保險'"></button>
+                    <button @click="addInsurance()" class="w-full bg-[#E5A93B] text-white text-xs font-semibold py-2.5 rounded-xl shadow-md" x-text="lang === 'en' ? 'Add Insurance & Save' : '新增保險併儲存'"></button>
                 </div>
             </div>
 
@@ -393,10 +415,10 @@
                 <span x-text="lang === 'en' ? 'Accounts' : '戶口'"></span>
             </button>
             
-            <!-- Center Floating Action Button -->
+            <!-- Center Floating Action Button (Quick Save) -->
             <div class="flex-1 flex justify-center -mt-6">
-                <button @click="activeTab = 'dashboard'" class="w-14 h-14 bg-[#E5A93B] text-white rounded-full shadow-lg shadow-amber-500/30 flex items-center justify-center transform hover:scale-105 transition">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                <button @click="saveAllData()" class="w-14 h-14 bg-[#E5A93B] text-white rounded-full shadow-lg shadow-amber-500/30 flex items-center justify-center transform hover:scale-105 transition" title="Save All Data">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
                 </button>
             </div>
 
@@ -498,6 +520,7 @@
                 selectedDayStr: todayDateStr,
                 yearsRange: years,
                 historyOpen: false,
+                showToast: false,
                 
                 dateStrip: dateStripArr,
 
@@ -527,6 +550,21 @@
                     { category: 'MPF', amount: 22100, currency: 'HKD', date: todayDateStr }
                 ],
                 newInsCategory: 'Saving Plan', newInsAmount: '', newInsCurrency: 'HKD', newInsDate: todayDateStr,
+
+                saveAllData() {
+                    // Push current dashboard summary numbers as snapshot records into history
+                    let saveDate = this.selectedDayStr || todayDateStr;
+                    
+                    if (this.totalIncome > 0) {
+                        this.accounts.push({ name: 'Monthly Income Snapshot', balance: Number(this.totalIncome), date: saveDate });
+                    }
+                    if (this.familyExpense > 0) {
+                        this.accounts.push({ name: 'Family Expense Record', balance: Number(this.familyExpense), date: saveDate });
+                    }
+
+                    this.showToast = true;
+                    setTimeout(() => { this.showToast = false; }, 3000);
+                },
 
                 matchesFilter(dateStr) {
                     if (!dateStr) return true;
@@ -650,6 +688,8 @@
                     if(this.newAccName && this.newAccBalance) {
                         this.accounts.push({ name: this.newAccName, balance: Number(this.newAccBalance), date: this.newAccDate });
                         this.newAccName = ''; this.newAccBalance = '';
+                        this.showToast = true;
+                        setTimeout(() => { this.showToast = false; }, 3000);
                     }
                 },
                 deleteAccount(item) { this.accounts = this.accounts.filter(i => i !== item); },
@@ -658,6 +698,8 @@
                     if(this.newInvAmount) {
                         this.investments.push({ category: this.newInvCategory, amount: Number(this.newInvAmount), date: this.newInvDate });
                         this.newInvAmount = '';
+                        this.showToast = true;
+                        setTimeout(() => { this.showToast = false; }, 3000);
                     }
                 },
                 deleteInvestment(item) { this.investments = this.investments.filter(i => i !== item); },
@@ -667,6 +709,8 @@
                         const names = { JPY: 'Japanese Yen', RMB: 'Chinese Yuan', EUR: 'Euro', GBP: 'British Pound', AUD: 'Australian Dollar', USD: 'US Dollar' };
                         this.foreignCurrencies.push({ currency: names[this.newFxCode], code: this.newFxCode, amount: Number(this.newFxAmount), date: this.newFxDate });
                         this.newFxAmount = '';
+                        this.showToast = true;
+                        setTimeout(() => { this.showToast = false; }, 3000);
                     }
                 },
                 deleteFx(item) { this.foreignCurrencies = this.foreignCurrencies.filter(i => i !== item); },
@@ -675,6 +719,8 @@
                     if(this.newInsAmount) {
                         this.insurances.push({ category: this.newInsCategory, amount: Number(this.newInsAmount), currency: this.newInsCurrency, date: this.newInsDate });
                         this.newInsAmount = '';
+                        this.showToast = true;
+                        setTimeout(() => { this.showToast = false; }, 3000);
                     }
                 },
                 deleteInsurance(item) { this.insurances = this.insurances.filter(i => i !== item); },
