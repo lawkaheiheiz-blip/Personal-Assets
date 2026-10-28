@@ -23,7 +23,7 @@
 
     <!-- Mobile App Container (Frame, status bar time, 5G, and battery removed) -->
     <div class="w-[390px] h-[844px] bg-[#F7F5F0] rounded-[48px] shadow-2xl overflow-hidden flex flex-col relative" 
-         x-data="financeApp()">
+         x-data="financeApp()" x-init="init()">
 
         <!-- Toast Notification for Successful Save -->
         <div x-show="showToast" 
@@ -509,44 +509,101 @@
             let years = [];
             for (let y = 2016; y <= 2096; y++) { years.push(y); }
 
+            const STORAGE_KEY = 'financeAppData';
+
+            function loadSavedData() {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        return JSON.parse(saved);
+                    }
+                } catch (e) {
+                    console.error('Failed to load data from localStorage:', e);
+                }
+                return null;
+            }
+
+            const savedData = loadSavedData();
+
             return {
-                activeTab: 'dashboard',
-                lang: 'en', 
-                userName: 'Jose Maria',
-                selectedAvatar: '👨',
+                init() {
+                    this.$watch('userName', () => this.saveToStorage());
+                    this.$watch('lang', () => this.saveToStorage());
+                    this.$watch('selectedAvatar', () => this.saveToStorage());
+                    this.$watch('activeTab', () => this.saveToStorage());
+                    this.$watch('selectedMonth', () => this.saveToStorage());
+                    this.$watch('selectedYear', () => this.saveToStorage());
+                    this.$watch('selectedDayStr', () => this.saveToStorage());
+                    this.$watch('totalIncome', () => this.saveToStorage());
+                    this.$watch('totalExpenses', () => this.saveToStorage());
+                    this.$watch('familyExpense', () => this.saveToStorage());
+                    this.$watch('accounts', () => this.saveToStorage(), { deep: true });
+                    this.$watch('investments', () => this.saveToStorage(), { deep: true });
+                    this.$watch('foreignCurrencies', () => this.saveToStorage(), { deep: true });
+                    this.$watch('insurances', () => this.saveToStorage(), { deep: true });
+                },
+
+                saveToStorage() {
+                    try {
+                        const data = {
+                            userName: this.userName,
+                            lang: this.lang,
+                            selectedAvatar: this.selectedAvatar,
+                            activeTab: this.activeTab,
+                            selectedMonth: this.selectedMonth,
+                            selectedYear: this.selectedYear,
+                            selectedDayStr: this.selectedDayStr,
+                            totalIncome: this.totalIncome,
+                            totalExpenses: this.totalExpenses,
+                            familyExpense: this.familyExpense,
+                            accounts: this.accounts,
+                            investments: this.investments,
+                            foreignCurrencies: this.foreignCurrencies,
+                            insurances: this.insurances
+                        };
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                    } catch (e) {
+                        console.error('Failed to save data to localStorage:', e);
+                    }
+                },
+
+                activeTab: savedData?.activeTab || 'dashboard',
+                lang: savedData?.lang || 'en', 
+                userName: savedData?.userName || 'Jose Maria',
+                selectedAvatar: savedData?.selectedAvatar || '👨',
                 
-                selectedMonth: currentMonthStr,
-                selectedYear: currentYearStr,
-                selectedDayStr: todayDateStr,
+                selectedMonth: savedData?.selectedMonth || currentMonthStr,
+                selectedYear: savedData?.selectedYear || currentYearStr,
+                selectedDayStr: savedData?.selectedDayStr || todayDateStr,
                 yearsRange: years,
                 historyOpen: false,
                 showToast: false,
                 
                 dateStrip: dateStripArr,
 
-                totalIncome: 4850.00,
-                totalExpenses: 1890.50,
-                familyExpense: 1240.00,
+                totalIncome: savedData?.totalIncome !== undefined ? savedData.totalIncome : 4850.00,
+                totalExpenses: savedData?.totalExpenses !== undefined ? savedData.totalExpenses : 1890.50,
+                familyExpense: savedData?.familyExpense !== undefined ? savedData.familyExpense : 1240.00,
 
-                accounts: [
+                accounts: savedData?.accounts || [
                     { name: 'HSBC Checking', balance: 18450, date: todayDateStr },
                     { name: 'BOC Emergency Savings', balance: 12000, date: '2026-10-10' },
                     { name: 'Hang Seng Joint Family', balance: 6350, date: '2026-09-20' }
                 ],
                 newAccName: '', newAccBalance: '', newAccDate: todayDateStr,
 
-                investments: [
+                investments: savedData?.investments || [
                     { category: 'Time-Deposit', amount: 15000, date: todayDateStr },
                     { category: 'Stocks', amount: 14200, date: '2026-10-12' }
                 ],
                 newInvCategory: 'Stocks', newInvAmount: '', newInvDate: todayDateStr,
 
-                foreignCurrencies: [
+                foreignCurrencies: savedData?.foreignCurrencies || [
                     { currency: 'Japanese Yen', code: 'JPY', amount: 150000, date: todayDateStr }
                 ],
                 newFxCode: 'JPY', newFxAmount: '', newFxDate: todayDateStr,
 
-                insurances: [
+                insurances: savedData?.insurances || [
                     { category: 'MPF', amount: 22100, currency: 'HKD', date: todayDateStr }
                 ],
                 newInsCategory: 'Saving Plan', newInsAmount: '', newInsCurrency: 'HKD', newInsDate: todayDateStr,
@@ -564,6 +621,7 @@
 
                     this.showToast = true;
                     setTimeout(() => { this.showToast = false; }, 3000);
+                    this.saveToStorage();
                 },
 
                 matchesFilter(dateStr) {
@@ -690,9 +748,10 @@
                         this.newAccName = ''; this.newAccBalance = '';
                         this.showToast = true;
                         setTimeout(() => { this.showToast = false; }, 3000);
+                        this.saveToStorage();
                     }
                 },
-                deleteAccount(item) { this.accounts = this.accounts.filter(i => i !== item); },
+                deleteAccount(item) { this.accounts = this.accounts.filter(i => i !== item); this.saveToStorage(); },
 
                 addInvestment() {
                     if(this.newInvAmount) {
@@ -700,9 +759,10 @@
                         this.newInvAmount = '';
                         this.showToast = true;
                         setTimeout(() => { this.showToast = false; }, 3000);
+                        this.saveToStorage();
                     }
                 },
-                deleteInvestment(item) { this.investments = this.investments.filter(i => i !== item); },
+                deleteInvestment(item) { this.investments = this.investments.filter(i => i !== item); this.saveToStorage(); },
 
                 addForeignCurrency() {
                     if(this.newFxAmount) {
@@ -711,9 +771,10 @@
                         this.newFxAmount = '';
                         this.showToast = true;
                         setTimeout(() => { this.showToast = false; }, 3000);
+                        this.saveToStorage();
                     }
                 },
-                deleteFx(item) { this.foreignCurrencies = this.foreignCurrencies.filter(i => i !== item); },
+                deleteFx(item) { this.foreignCurrencies = this.foreignCurrencies.filter(i => i !== item); this.saveToStorage(); },
 
                 addInsurance() {
                     if(this.newInsAmount) {
@@ -721,9 +782,10 @@
                         this.newInsAmount = '';
                         this.showToast = true;
                         setTimeout(() => { this.showToast = false; }, 3000);
+                        this.saveToStorage();
                     }
                 },
-                deleteInsurance(item) { this.insurances = this.insurances.filter(i => i !== item); },
+                deleteInsurance(item) { this.insurances = this.insurances.filter(i => i !== item); this.saveToStorage(); },
 
                 formatCurrency(value) {
                     return '$' + Number(value).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
